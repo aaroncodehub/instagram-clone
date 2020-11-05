@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./App.scss";
 import Post from "./components/Post";
-import db,{auth} from "./firebase";
+import db, { auth } from "./firebase";
 import { Modal, makeStyles, Input, Button } from "@material-ui/core";
+import ImageUpload from "./components/ImageUpload";
 
 function getModalStyle() {
   const top = 50;
@@ -45,6 +46,20 @@ function App() {
     );
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((authUser) => {
+      if (authUser) {
+        setUser(authUser);
+        
+      } else {
+        setUser(null);
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [username, user]);
+
   const handleLogin = (e) => {
     e.preventDefault();
     auth
@@ -58,12 +73,19 @@ function App() {
     e.preventDefault();
     auth
       .createUserWithEmailAndPassword(email, password)
+      .then((authUser) => {
+        authUser.user.updateProfile({
+          displayName: username,
+        });
+      })
       .catch((error) => alert(error.message));
     setRegisterOpen(false);
   };
 
+
   return (
     <div className="app">
+      <ImageUpload/>
       <Modal open={open} onClose={() => setOpen(false)}>
         <div style={modalStyle} className={classes.paper}>
           <form className="app__login">
@@ -131,8 +153,18 @@ function App() {
           src="https://www.instagram.com/static/images/web/mobile_nav_type_logo.png/735145cfe0a4.png"
           alt=""
         />
+        {user?.displayName ? (
+          <div className="app__headerRight">
+            <Button onClick={() => auth.signOut()}>Logout</Button>
+          </div>
+        ) : (
+          <form className="app__loginHome">
+            <Button onClick={() => setOpen(true)}>Login</Button>
+            <Button onClick={() => setRegisterOpen(true)}>Sign Up</Button>
+          </form>
+        )}
       </div>
-        <Button onClick={() => setOpen(true)}>Sign Up</Button>
+
       <Post
         username="Aaron"
         caption="it is working"
