@@ -4,6 +4,7 @@ import Post from "./components/Post";
 import db, { auth } from "./firebase";
 import { Modal, makeStyles, Input, Button } from "@material-ui/core";
 import ImageUpload from "./components/ImageUpload";
+import InstagramEmbed from 'react-instagram-embed';
 
 function getModalStyle() {
   const top = 50;
@@ -37,20 +38,21 @@ function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
-  const [open, setOpen] = useState(false);
-  const [registerOpen, setRegisterOpen] = useState(false);
+  const [signIn, setSignInOpen] = useState(false);
+  const [signUpOpen, setSignUpOpen] = useState(false);
 
   useEffect(() => {
-    db.collection("intagram").onSnapshot((snapshot) =>
-      setPosts(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
-    );
+    db.collection("intagram")
+      .orderBy("timestamp", "desc")
+      .onSnapshot((snapshot) =>
+        setPosts(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+      );
   }, []);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
       if (authUser) {
         setUser(authUser);
-        
       } else {
         setUser(null);
       }
@@ -60,16 +62,16 @@ function App() {
     };
   }, [username, user]);
 
-  const handleLogin = (e) => {
+  const handleSignIn = (e) => {
     e.preventDefault();
     auth
       .signInWithEmailAndPassword(email, password)
       .catch((error) => alert(error.message));
 
-    setOpen(false);
+    setSignInOpen(false);
   };
 
-  const handleRegister = (e) => {
+  const handleSignUp = (e) => {
     e.preventDefault();
     auth
       .createUserWithEmailAndPassword(email, password)
@@ -79,14 +81,12 @@ function App() {
         });
       })
       .catch((error) => alert(error.message));
-    setRegisterOpen(false);
+    setSignUpOpen(false);
   };
-
 
   return (
     <div className="app">
-      <ImageUpload/>
-      <Modal open={open} onClose={() => setOpen(false)}>
+      <Modal open={signIn} onClose={() => signIn(false)}>
         <div style={modalStyle} className={classes.paper}>
           <form className="app__login">
             <center>
@@ -109,12 +109,12 @@ function App() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <Button onClick={handleLogin}>Login</Button>
+            <Button onClick={handleSignIn}>Login</Button>
           </form>
         </div>
       </Modal>
 
-      <Modal open={registerOpen} onClose={() => setRegisterOpen(false)}>
+      <Modal open={signUpOpen} onClose={() => signUpOpen(false)}>
         <div style={modalStyle} className={classes.paper}>
           <form className="app__login">
             <center>
@@ -142,7 +142,7 @@ function App() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <Button onClick={handleRegister}>Register</Button>
+            <Button onClick={handleSignUp}>Register</Button>
           </form>
         </div>
       </Modal>
@@ -159,19 +159,38 @@ function App() {
           </div>
         ) : (
           <form className="app__loginHome">
-            <Button onClick={() => setOpen(true)}>Login</Button>
-            <Button onClick={() => setRegisterOpen(true)}>Sign Up</Button>
+            <Button onClick={() => setSignInOpen(true)}>Login</Button>
+            <Button onClick={() => setSignUpOpen(true)}>Sign Up</Button>
           </form>
         )}
       </div>
-
-      <Post
-        username="Aaron"
-        caption="it is working"
-        imageUrl="http://sharpeye.co.nz/img/product/balustrade/Double-Disk01.jpg"
-      />
-      <Post />
-      <Post />
+      <div className="app__posts">
+        <div className="app_postsLeft">
+          {posts?.map(({ id, ...props }) => (
+            <Post key={id} {...props} />
+          ))}
+        </div>
+        <div className="app__postsRight">
+          
+          <InstagramEmbed
+            url="https://instagr.am/p/Zw9o4/"
+            maxWidth={320}
+            hideCaption={false}
+            containerTagName="div"
+            injectScript
+            protocol=""
+            onLoading={() => {}}
+            onSuccess={() => {}}
+            onAfterRender={() => {}}
+            onFailure={() => {}}
+          />
+        </div>
+      </div>
+      {user?.displayName ? (
+        <ImageUpload username={user?.displayName} />
+      ) : (
+        <h3>Sorry you need to login to upload</h3>
+      )}
     </div>
   );
 }

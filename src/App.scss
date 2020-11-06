@@ -5,6 +5,8 @@
     object-fit: contain;
     padding: 20px;
     border-bottom: 1px solid lightgray;
+    display: flex;
+    justify-content: space-between;
   }
 
   &__login {
@@ -30,5 +32,20 @@
   &__headerRight {
     display: flex;
     align-items: center;
+  }
+
+  &__headerImage {
+    object-fit: contain;
+  }
+
+  &__posts {
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    padding: 10px 30px;
+
+    &__postsRight {
+      margin-left: 10px;
+    }
   }
 }
